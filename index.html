@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Treinos Personalizado para Alunos</title>
+    <!-- Inclui a biblioteca jsPDF para geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.21/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2b5876, #4e4376); /* Gradiente suave */
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            line-height: 1.6;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.1); /* Fundo semi-transparente claro */
+            backdrop-filter: blur(10px); /* Efeito de vidro fosco */
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+            animation: fadeIn 1s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            color: #a8dadc; /* Azul claro */
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #e0f2f7;
+            font-size: 1.1em;
+        }
+
+        .input-group input[type="text"],
+        .input-group select,
+        .input-group textarea {
+            width: calc(100% - 24px); /* Ajuste para padding e borda */
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 1em;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            /* Garante que o texto dentro do select seja legível no Safari/Chrome */
+            -webkit-appearance: none; /* Remove estilo padrão do navegador */
+            -moz-appearance: none;    /* Remove estilo padrão do navegador */
+            appearance: none;         /* Remove estilo padrão do navegador */
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13.2-6.5h-258a17.6%2017.6%200%200%00-13.2%206.5%2017.6%2017.6%200%200%200%200%2022.2l128.6%20127.9c4.2%204.1%2011%204.1%2015.2%200l128.6-127.9a17.6%2017.6%200%200%200%200-22.2z%22%2F%3E%3C%2Fsvg%3E'); /* Seta branca personalizada */
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            background-size: 12px auto;
+        }
+        
+        /* Ajuste específico para as opções dentro do select */
+        .input-group select option {
+            background-color: #1d3557; /* Fundo escuro para as opções */
+            color: #fff; /* Texto branco */
+        }
+
+        .input-group textarea {
+            min-height: 80px; /* Altura mínima para observações */
+            resize: vertical; /* Permite redimensionar verticalmente */
+        }
+
+        .input-group input[type="text"]:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #a8dadc;
+            box-shadow: 0 0 0 4px rgba(168, 218, 220, 0.4);
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 25px;
+            background-color: #457b9d; /* Azul médio */
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            background-color: #1d3557; /* Azul escuro */
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        button#exportPdfBtn {
+            background-color: #f4a261; /* Laranja suave */
+            margin-top: 15px;
+        }
+
+        button#exportPdfBtn:hover {
+            background-color: #e76f51; /* Laranja mais forte */
+        }
+
+        /* Estilos para a nova seção de dias personalizados */
+        #customDivisionsContainer {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .custom-day-entry {
+            background-color: rgba(255, 255, 255, 0.08);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .custom-day-entry:last-child {
+            margin-bottom: 0;
+        }
+
+        .custom-day-entry label {
+            font-size: 1em;
+            margin-bottom: 5px;
+            color: #e0f2f7;
+        }
+
+        /* Estilo para o grupo de checkboxes dentro do dia personalizado */
+        .custom-day-entry .muscle-selection-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px; /* Espaço antes do botão remover */
+        }
+
+        .custom-day-entry .muscle-selection-group label {
+            display: flex;
+            align-items: center;
+            font-size: 0.95em;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: background-color 0.2s ease;
+        }
+        
+        .custom-day-entry .muscle-selection-group label:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .custom-day-entry .muscle-selection-group input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1);
+            accent-color: #457b9d;
+        }
+
+        .custom-day-entry .remove-day-btn {
+            width: 100px;
+            padding: 8px 10px;
+            margin: 0;
+            font-size: 0.9em;
+            background-color: #e76f51; /* Cor para remover */
+            display: block; /* Para ocupar a largura total em mobile */
+            margin-left: auto; /* Alinhar à direita em desktop */
+            margin-right: auto; /* Centralizar em mobile */
+            box-shadow: none;
+        }
+
+        .custom-day-entry .remove-day-btn:hover {
+            background-color: #d64a2e;
+            transform: none;
+        }
+
+        #addCustomDayBtn {
+            margin-top: 15px;
+            background-color: #2a9d8f; /* Cor para adicionar dia */
+        }
+
+        #addCustomDayBtn:hover {
+            background-color: #218579;
+        }
+
+
+        #resultado {
+            background-color: rgba(0, 0, 0, 0.4);
+            padding: 30px;
+            margin-top: 30px;
+            border-radius: 15px;
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.8;
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
+            max-height: 70vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        #resultado h2 {
+            color: #a8dadc;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+            padding-bottom: 5px;
+        }
+
+        #resultado h3 {
+            color: #a8dadc;
+            font-size: 1.4em;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        #resultado strong {
+            color: #f4a261; /* Laranja para destaque */
+        }
+
+        .checkbox-group { /* Mantido para técnicas avançadas e opcionais */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.3);
+            accent-color: #457b9d; /* Cor do checkbox */
+        }
+
+        /* Estilo específico para o novo grupo de checkboxes de ênfase */
+        #muscleEmphasisContainer {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        #muscleEmphasisContainer .muscle-emphasis-checkbox-group label {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: background-color 0.2s ease;
+        }
+        #muscleEmphasisContainer .muscle-emphasis-checkbox-group label:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        #muscleEmphasisContainer .muscle-emphasis-checkbox-group input[type="checkbox"] {
+            accent-color: #f4a261; /* Cor de destaque para ênfase */
+        }
+
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            button {
+                font-size: 1.1em;
+                padding: 12px;
+            }
+            .custom-day-entry .remove-day-btn {
+                width: 100%; /* Botão remover ocupa toda a largura */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Gerador de Treinos Personalizados para Alunos ✨</h1>
+
+        <div class="input-group">
+            <label for="nomeAluno">Nome do Aluno:</label>
+            <input type="text" id="nomeAluno" placeholder="Nome completo do aluno" required>
+        </div>
+
+        <div class="input-group">
+            <label for="sexo">Sexo:</label>
+            <select id="sexo">
+                <option value="Masculino">Masculino</option>
+                <option value="Feminino">Feminino</option>
+                <option value="Outro">Outro</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="nivel">Nível de Treinamento:</label>
+            <select id="nivel">
+                <option value="Iniciante">Iniciante</option>
+                <option value="Intermediario">Intermediário</option>
+                <option value="Avancado">Avançado</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="objetivo">Objetivo do Treino:</label>
+            <select id="objetivo">
+                <option value="Hipertrofia">Hipertrofia (Ganho de Massa Muscular)</option>
+                <option value="Emagrecimento">Emagrecimento (Perda de Gordura)</option>
+                <option value="Forca">Força (Aumento de Cargas)</option>
+                <option value="Resistencia">Resistência Muscular</option>
+            </select>
+        </div>
+
+        <!-- Nova seção para configurar dias de treino personalizados -->
+        <div class="input-group">
+            <label>Configuração dos Dias de Treino:</label>
+            <div id="customDivisionsContainer">
+                <!-- Dias de treino personalizados serão adicionados aqui via JS -->
+            </div>
+            <button type="button" id="addCustomDayBtn" onclick="addCustomDay()">Adicionar Dia de Treino</button>
+        </div>
+        <!-- Fim da nova seção -->
+
+        <div class="input-group">
+            <label>Exercícios Opcionais (Selecione para incluir):</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="includeElastic" class="optional-exercise" value="Faixa Elástica"> Incluir Exercícios com Faixa Elástica</label>
+                <label><input type="checkbox" id="includeBodyweight" class="optional-exercise" value="Peso Corporal"> Incluir Exercícios com Peso Corporal (Flexões, etc.)</label>
+                <label><input type="checkbox" id="includeCables" class="optional-exercise" value="Cabos"> Incluir Exercícios com Cabos</label>
+                <label><input type="checkbox" id="includeKettlebell" class="optional-exercise" value="Kettlebell"> Incluir Exercícios com Kettlebell</label>
+            </div>
+        </div>
+
+        <!-- Nova seção para seleção de ênfase muscular (múltipla) -->
+        <div class="input-group">
+            <label>Músculos para Dar Ênfase (Opcional):</label>
+            <div id="muscleEmphasisContainer">
+                <div class="checkbox-group muscle-emphasis-checkbox-group" id="muscleEmphasisCheckboxes">
+                    <!-- Checkboxes de ênfase serão populados aqui via JS -->
+                </div>
+            </div>
+        </div>
+        <!-- Fim da nova seção -->
+
+        <div class="input-group">
+            <label>Técnicas Avançadas (Opcional):</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" class="tecnica-avancada" value="Drop set"> Drop set</label>
+                <label><input type="checkbox" class="tecnica-avancada" value="Pirâmide"> Pirâmide</label>
+                <label><input type="checkbox" class="tecnica-avancada" value="Superset"> Superset</label>
+                <label><input type="checkbox" class="tecnica-avancada" value="Rest-pause"> Rest-pause</label>
+                <label><input type="checkbox" class="tecnica-avancada" value="FST-7"> FST-7</label>
+                <label><input type="checkbox" class="tecnica-avancada" value="Bi-set"> Bi-set</label>
+                <label><input type="checkbox" class="tecnica-avancada" value="Cluster set"> Cluster set</label>
+                <label><input type="checkbox" class="tecnica-avancada" value="Myo-reps"> Myo-reps</label>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="observacoesGerais">Observações Gerais para o Aluno:</label>
+            <textarea id="observacoesGerais" placeholder="Ex: 'Focar na boa execução', 'Lembre-se da hidratação'." rows="3"></textarea>
+        </div>
+
+        <button onclick="gerarTreino()">Gerar Treino</button>
+        <button id="exportPdfBtn" onclick="exportarTreinoParaPDF()">Exportar para PDF</button>
+
+        <div id="resultado">
+            <p>O seu treino será gerado aqui!</p>
+        </div>
+    </div>
+
+    <script>
+        // Dados brutos dos exercícios fornecidos pelo utilizador
+        const rawExerciseData = `
+PEITO
+Supino reto com barra
+Supino reto com halteres
+Supino inclinado com barra
+Supino inclinado com halteres
+Supino declinado com barra
+Supino declinado com halteres
+Crucifixo reto com halteres
+Crucifixo inclinado com halteres
+Crucifixo declinado com halteres
+Crossover no cross
+Crossover alto no cross
+Crossover baixo no cross
+Flexão de braço tradicional
+Flexão de braço inclinada
+Flexão de braço declinada
+Flexão de braço com pegada aberta
+Flexão de braço com pegada fechada
+Peck deck (voador)
+Supino no smith (reto, inclinado ou declinado)
+Crucifixo na máquina
+COSTAS
+Puxada frente na polia alta
+Puxada atrás na polia alta
+Puxada com triângulo
+Remada baixa com triangulo
+Remada curvada com barra
+Remada curvada com halteres
+Remada unilateral com halteres
+Remada cavalinho (T-bar)
+Remada alta no cross
+Remada máquina articulada
+Remada sentado no cabo
+Remada em pé no cross
+Remada no smith
+Barra fixa (pegada pronada)
+Barra fixa (pegada supinada)
+Barra fixa com pegada neutra
+Pullover com halteres
+Pullover na máquina
+Pullover no cross
+Face pull
+TRAPÉZIO
+Encolhimento com halteres
+Encolhimento com barra
+Encolhimento com barra atrás
+Encolhimento no smith
+Encolhimento unilateral com halteres
+Encolhimento com barra hexagonal
+Encolhimento isométrico com barra
+Encolhimento com kettlebell
+Remada alta com barra ou halteres
+DELTOIDES (OMBRO)
+Desenvolvimento com barra
+Desenvolvimento com halteres
+Desenvolvimento no smith
+Elevação lateral com halteres
+Elevação lateral no cross
+Elevação frontal com halteres
+Elevação frontal no cross
+Elevação unilateral (lateral ou frontal)
+Elevação lateral inclinada
+Crucifixo inverso com halteres
+Crucifixo inverso no cross
+Remada alta com barra
+Remada alta no cabo
+Desenvolvimento Arnold
+Desenvolvimento na máquina
+Elevação lateral na máquina
+BÍCEPS
+Rosca direta com barra
+Rosca direta com halteres
+Rosca alternada com halteres
+Rosca martelo
+Rosca concentrada
+Rosca scott (barra ou halteres)
+Rosca no cross (cabo baixo)
+Rosca unilateral no cross
+Rosca inversa
+Rosca 21
+Rosca com barra W
+Rosca unilateral no banco inclinado
+Rosca spider
+Rosca no banco inclinado com halteres
+TRÍCEPS
+Tríceps na polia alta (barra ou corda)
+Tríceps testa com barra ou halteres
+Tríceps banco (mergulho)
+Tríceps coice
+Tríceps francês com halteres
+Tríceps francês com barra
+Tríceps unilateral no cross
+Tríceps no cross com barra V
+Tríceps no cross com corda
+Tríceps kickback unilateral
+Tríceps supinado com halteres
+Tríceps na máquina
+Tríceps no cross atrás da cabeça
+QUADRÍCEPS
+Agachamento livre
+Agachamento no smith
+Agachamento hack
+Agachamento frontal
+Agachamento sumô
+Avanço (passada) com barra
+Avanço com halteres
+Avanço no smith
+Cadeira extensora
+Agachamento búlgaro
+Agachamento unilateral no banco
+Agachamento com barra frontal
+Agachamento com kettlebell
+Agachamento isométrico
+Agachamento com salto
+Pistol squat (agachamento unilateral)
+Agachamento na máquina guiada
+Step-up com halteres
+Agachamento sumô com kettlebell
+Cadeira extensora unilateral
+POSTERIOR DE COXA (ISQUIOTIBIAIS)
+Mesa flexora
+Flexora unilateral
+Stiff com barra
+Stiff com halteres
+Stiff unilateral
+Levantamento terra romeno
+Flexora em pé
+Flexora sentada
+Cadeira flexora isolada
+Flexão nórdica
+Levantamento terra com pernas rígidas
+Flexão de joelhos no TRX
+Elevação de quadril com bola
+Glute bridge com isometria
+Stiff com kettlebell
+Flexão com bola suíça
+Flexora com halteres entre os pés
+Stiff unilateral com halteres
+Flexão no cross com caneleira
+Flexora bilateral com halteres
+GLÚTEOS
+Elevação pélvica com barra (hip thrust)
+Elevação pélvica unilateral
+Glute bridge no solo
+Glute bridge com barra
+Extensão de quadril no cross
+Extensão de quadril com caneleira
+Cadeira abdutora
+Stiff com foco no glúteo
+Agachamento sumô
+Passada com halteres
+Agachamento búlgaro
+Step-up com halteres
+Kickback no cross
+Kickback com caneleira
+Ponte com bola
+Glute bridge isométrico
+Extensão com faixa elástica
+Ponte unilateral
+Hip thrust no smith
+Abdução lateral com elástico
+PANTURRILHAS
+Elevação plantar em pé
+Elevação plantar sentado
+Elevação plantar na leg press
+Elevação plantar unilateral
+Elevação plantar com halteres
+Elevação plantar no smith
+Elevação plantar na escada
+Elevação com kettlebell
+Elevação na máquina específica
+Elevação em degrau (calcanhar fora)
+Elevação plantar com barra
+Saltos com foco na panturrilha
+Isometria em elevação
+Elevação com uma perna só
+Caminhada na ponta dos pés
+Pliometria para panturrilhas
+Panturrilha no hack
+Panturrilha no step
+Panturrilha unilateral com peso
+Panturrilha no crossover
+ABDÔMEN
+Abdominal tradicional no solo
+Abdominal infra com pernas elevadas
+Abdominal infra na barra
+Abdominal oblíquo no solo
+Abdominal bicicleta
+Prancha isométrica
+Prancha lateral
+Prancha com elevação de perna
+Prancha com apoio nos cotovelos
+Elevação de pernas no banco declinado
+Elevação de pernas na cadeira romana
+Abdominal com bola suíça
+Abdominal com corda no cross
+Abdominal com carga
+Abdominal com rolo (ab wheel)
+Abdominal no banco inclinado
+Abdominal canivete
+Abdominal com elevação de quadril
+Abdominal com torção
+Abdominal com kettlebell
+CARDIOVASCULARES / AERÓBIOS
+Caminhada na esteira
+Corrida na esteira
+Bicicleta ergométrica
+Bicicleta spinning
+Subir escadas
+Corrida ao ar livre
+Caminhada acelerada
+Polichinelo
+Corrida estacionária
+Corrida com joelhos altos
+Corrida com calcanhar no glúteo
+Pular corda
+Jump (trampolim)
+Escalador (mountain climbers)
+Burpees
+Sprints curtos (tiros)
+Escada de agilidade
+HIIT na esteira
+Saltos pliométricos
+Dança aeróbica
+`;
+
+        // Helper function to infer equipment from exercise name
+        function inferEquipment(exerciseName) {
+            const lowerName = exerciseName.toLowerCase();
+            if (lowerName.includes("barra fixa") || lowerName.includes("pull-up") || lowerName.includes("chin-up") || lowerName.includes("paralelas")) {
+                return ["Barra Fixa / Paralela"];
+            }
+            if (lowerName.includes("barra") && !lowerName.includes("barra v") && !lowerName.includes("barra t")) { // Exclude specific bar types that are accessories
+                return ["Barra"];
+            }
+            if (lowerName.includes("halteres") || lowerName.includes("halter")) {
+                return ["Halteres"];
+            }
+            if (lowerName.includes("kettlebell")) { // Specific entry for kettlebell
+                return ["Kettlebell"];
+            }
+            if (lowerName.includes("máquina") || lowerName.includes("smith") || lowerName.includes("peck deck") || lowerName.includes("leg press") || lowerName.includes("cadeira extensora") || lowerName.includes("mesa flexora") || lowerName.includes("hack") || lowerName.includes("cadeira abdutora") || lowerName.includes("supino guiado") || lowerName.includes("remada máquina articulada") || lowerName.includes("elevação na máquina específica") || lowerName.includes("panturrilha no hack")) {
+                return ["Máquina"];
+            }
+            if (lowerName.includes("cabo") || lowerName.includes("cross-over") || lowerName.includes("polia") || lowerName.includes("crossover") || lowerName.includes("face pull") || lowerName.includes("remada em pé no cross") || lowerName.includes("kickback no cross") || lowerName.includes("panturrilha no crossover")) { // Specific entry for cables
+                return ["Cabos"];
+            }
+            if (lowerName.includes("solo") || lowerName.includes("braço") || lowerName.includes("pés") || lowerName.includes("banco") || lowerName.includes("pistol squat") || lowerName.includes("flexão") || lowerName.includes("prancha") || lowerName.includes("abdominal") || lowerName.includes("roda abdominal") || lowerName.includes("ab wheel") || lowerName.includes("caneleira") || lowerName.includes("glute bridge") || lowerName.includes("ponte") || lowerName.includes("wall sit") || lowerName.includes("flexão nórdica") || lowerName.includes("corrida ao ar livre") || lowerName.includes("caminhada acelerada") || lowerName.includes("polichinelo") || lowerName.includes("corrida estacionária") || lowerName.includes("corrida com joelhos altos") || lowerName.includes("corrida com calcanhar no glúteo") || lowerName.includes("pular corda") || lowerName.includes("jump") || lowerName.includes("escalador") || lowerName.includes("burpees") || lowerName.includes("sprints") || lowerName.includes("escada de agilidade") || lowerName.includes("saltos pliométricos") || lowerName.includes("dança aeróbica")) {
+                return ["Peso Corporal"];
+            }
+            if (lowerName.includes("elástico") || lowerName.includes("trx") || lowerName.includes("faixa elástica")) {
+                return ["Faixa Elástica"];
+            }
+            if (lowerName.includes("bola suíça") || lowerName.includes("bola medicinal") || lowerName.includes("rolo")) {
+                return ["Outros Acessórios"];
+            }
+            if (lowerName.includes("esteira") || lowerName.includes("bicicleta") || lowerName.includes("spinning") || lowerName.includes("escadas")) {
+                return ["Máquina de Cardio"];
+            }
+            // Fallback for exercises that don't clearly imply equipment
+            return ["Diversos"]; 
+        }
+
+        // Helper to determine exercise difficulty (new function)
+        function determineDifficulty(exerciseName, group) {
+            const lowerName = exerciseName.toLowerCase();
+
+            if (group === "Cardio") {
+                if (lowerName.includes("caminhada") || lowerName.includes("polichinelo") || lowerName.includes("corrida estacionária") || lowerName.includes("bicicleta ergométrica")) {
+                    return "Iniciante";
+                }
+                if (lowerName.includes("corrida na esteira") || lowerName.includes("subir escadas") || lowerName.includes("pular corda") || lowerName.includes("jump") || lowerName.includes("escalador") || lowerName.includes("bicicleta spinning")) {
+                    return "Intermediario";
+                }
+                if (lowerName.includes("sprints") || lowerName.includes("burpees") || lowerName.includes("hiit") || lowerName.includes("saltos pliométricos") || lowerName.includes("dança aeróbica") || lowerName.includes("escada de agilidade")) {
+                    return "Avancado";
+                }
+                return "Intermediario"; // Default for cardio if not specific
+            }
+
+            // Existing logic for strength exercises (refined)
+            // Iniciante keywords
+            if (lowerName.includes("máquina") || lowerName.includes("sentado") || lowerName.includes("guiado") || lowerName.includes("colchonete") || lowerName.includes("solo") || lowerName.includes("banco") || lowerName.includes("elástico") || lowerName.includes("step (peso corporal)") || lowerName.includes("wall sit") || lowerName.includes("cadeira abdutora") || lowerName.includes("mesa flexora") || lowerName.includes("cadeira extensora") || lowerName.includes("voador") || lowerName.includes("crucifixo na máquina") || lowerName.includes("remada sentado no cabo") || lowerName.includes("tríceps na máquina") || lowerName.includes("flexão de braço tradicional") || lowerName.includes("abdominal tradicional no solo") || lowerName.includes("prancha isométrica") || lowerName.includes("glute bridge no solo") || lowerName.includes("elevação plantar em pé") || lowerName.includes("encolhimento com halteres")) {
+                return "Iniciante";
+            }
+            // Avançado keywords
+            if (lowerName.includes("livre") || (lowerName.includes("barra") && !lowerName.includes("máquina") && !lowerName.includes("smith") && !lowerName.includes("barra w") && !lowerName.includes("barra t")) || (lowerName.includes("halteres") && !lowerName.includes("máquina")) || lowerName.includes("pistol squat") || lowerName.includes("handstand push-up") || lowerName.includes("dragon flag") || lowerName.includes("levantamento terra") || lowerName.includes("push press") || lowerName.includes("arnold press") || lowerName.includes("flexão nórdica") || lowerName.includes("paralelas") || lowerName.includes("agachamento hack") || lowerName.includes("agachamento búlgaro") || lowerName.includes("barra fixa") || lowerName.includes("remada curvada") || lowerName.includes("stiff") || lowerName.includes("hip thrust") || lowerName.includes("abdominal infra na barra") || lowerName.includes("abdominal com rolo") || lowerName.includes("abdominal canivete") || lowerName.includes("abdominal com elevação de quadril") || lowerName.includes("remada cavalinho") || lowerName.includes("encolhimento com barra hexagonal") || lowerName.includes("encolhimento isométrico") || lowerName.includes("tríceps testa") || lowerName.includes("tríceps francês") || lowerName.includes("flexora unilateral")) {
+                return "Avancado";
+            }
+            // Default to Intermediario
+            return "Intermediario";
+        }
+
+
+        // Função para analisar os dados brutos e estruturá-los
+        function parseAndStructureExercises(rawData) {
+            const lines = rawData.trim().split('\n');
+            const strengthExercises = {
+                "Peito": { "Iniciante": [], "Intermediario": [], "Avancado": [] },
+                "Costas": { "Iniciante": [], "Intermediario": [], "Avancado": [] },
+                "Glúteos": { "Iniciante": [], "Intermediario": [], "Avancado": [] }, // Separado
+                "Posterior de Coxa": { "Iniciante": [], "Intermediario": [], "Avancado": [] }, // Separado
+                "Ombro": { "Iniciante": [], "Intermediario": [], "Avancado": [] },
+                "Bíceps": { "Iniciante": [], "Intermediario": [], "Avancado": [] },
+                "Tríceps": { "Iniciante": [], "Intermediario": [], "Avancado": [] },
+                "Quadríceps": { "Iniciante": [], "Intermediario": [], "Avancado": [] },
+                "Panturrilha": { "Iniciante": [], "Intermediario": [], "Avancado": [] },
+                "Abdômen": { "Iniciante": [], "Intermediario": [], "Avancado": [] },
+                "Trapézio": { "Iniciante": [], "Intermediario": [], "Avancado": [] } // Novo grupo adicionado
+            };
+
+            const cardioExercises = {
+                "Iniciante": [],
+                "Intermediario": [],
+                "Avancado": []
+            };
+
+            const allGroupsMap = {
+                "PEITO": "Peito",
+                "COSTAS": "Costas",
+                "TRAPÉZIO": "Trapézio", // Mapeamento para o novo grupo
+                "DELTOIDES (OMBRO)": "Ombro",
+                "BÍCEPS": "Bíceps",
+                "TRÍCEPS": "Tríceps",
+                "QUADRÍCEPS": "Quadríceps",
+                "POSTERIOR DE COXA (ISQUIOTIBIAIS)": "Posterior de Coxa",
+                "GLÚTEOS": "Glúteos",
+                "PANTURRILHAS": "Panturrilha",
+                "ABDÔMEN": "Abdômen",
+                "CARDIOVASCULARES / AERÓBIOS": "Cardio" // Mapeamento para exercícios de cardio
+            };
+            let currentGroup = "";
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (!trimmedLine) continue; // Ignora linhas vazias
+
+                // Verifica se a linha é um cabeçalho de grupo muscular ou cardio
+                const mappedGroup = allGroupsMap[trimmedLine.toUpperCase()];
+                if (mappedGroup) {
+                    currentGroup = mappedGroup;
+                } else if (currentGroup) {
+                    const exerciseName = trimmedLine;
+                    const equipment = inferEquipment(exerciseName);
+                    const instructions = ""; 
+                    const difficulty = determineDifficulty(exerciseName, currentGroup); // Passa o grupo para ajudar na determinação da dificuldade
+
+                    if (currentGroup === "Cardio") {
+                        cardioExercises[difficulty].push({
+                            nome: exerciseName,
+                            difficulty: difficulty
+                        });
+                    } else if (strengthExercises[currentGroup]) {
+                        // Adiciona o exercício a todos os níveis do grupo de força
+                        strengthExercises[currentGroup]["Iniciante"].push({ nome: exerciseName, grupoPrimario: currentGroup, equipamento: equipment, instrucoes: instructions, difficulty: difficulty });
+                        strengthExercises[currentGroup]["Intermediario"].push({ nome: exerciseName, grupoPrimario: currentGroup, equipamento: equipment, instrucoes: instructions, difficulty: difficulty });
+                        strengthExercises[currentGroup]["Avancado"].push({ nome: exerciseName, grupoPrimario: currentGroup, equipamento: equipment, instrucoes: instructions, difficulty: difficulty });
+                    } else {
+                        console.warn(`Grupo muscular não reconhecido ou mapeado incorretamente para o exercício "${exerciseName}": ${currentGroup}`);
+                    }
+                }
+            }
+            return { strengthExercises, cardioExercises };
+        }
+
+        // --- BANCO DE DADOS DE EXERCÍCIOS (Gerado a partir da sua lista) ---
+        // As variáveis globais agora recebem os objetos retornados pela função de parsing
+        const { strengthExercises, cardioExercises } = parseAndStructureExercises(rawExerciseData);
+        const bancoDeExercicios = strengthExercises; // Mantém o nome para compatibilidade com o código existente
+
+
+        const aquecimentoAlongamento = {
+            "Aquecimento Geral (5-10 minutos)": [
+                "Polichinelos (2 min)",
+                "Rotação de braços para frente e para trás (1 min)",
+                "Rotação de tronco suave (1 min)",
+                "Agachamento com peso corporal (10-15 reps)",
+                "Elevação de joelhos (1 min)",
+                "Calcanhares nos glúteos (1 min)",
+                "Alongamento dinâmico de pernas (balanços frontais e laterais) - 2 min",
+                "Caminhada com elevação de pernas (1 min)",
+                "Rotação de tornozelos (30s cada)",
+                "Ponte de glúteos (10-15 reps)"
+            ]
+        };
+
+        // Variável para armazenar o conteúdo do treino gerado e ser usado no PDF
+        let treinoGeradoConteudoHTML = ""; // Armazenará o HTML completo
+        // Objeto para armazenar os dados estruturados para o PDF
+        let treinoGeradoConteudoParaPDF = {}; 
+
+        // Variáveis para gerenciar os dias personalizados
+        let dayCounter = 0; // Para gerar IDs e rótulos (Dia A, Dia B...)
+        const muscleGroupOptions = [ // Lista de grupos musculares válidos para o input do utilizador
+            "Peito", "Costas", "Ombro", "Bíceps", "Tríceps",
+            "Quadríceps", "Posterior de Coxa", "Glúteos", "Panturrilha", "Abdômen", "Trapézio" // Adicionado Trapézio
+        ];
+
+        // Função para adicionar um novo dia de treino personalizado
+        function addCustomDay() {
+            const container = document.getElementById('customDivisionsContainer');
+            const dayId = `custom_day_${dayCounter}`;
+            const dayLabel = String.fromCharCode(65 + dayCounter); // A, B, C...
+
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'custom-day-entry input-group';
+            dayDiv.id = dayId;
+            
+            // Cria os checkboxes para cada grupo muscular
+            let checkboxesHtml = muscleGroupOptions.map(group => `
+                <label>
+                    <input type="checkbox" name="${dayId}_group_checkbox" value="${group}">
+                    ${group}
+                </label>
+            `).join('');
+
+            dayDiv.innerHTML = `
+                <label>Dia ${dayLabel}: Selecione os Grupos Musculares</label>
+                <div class="checkbox-group muscle-selection-group" id="${dayId}_groups_container">
+                    ${checkboxesHtml}
+                </div>
+                <button type="button" class="remove-day-btn" onclick="removeCustomDay('${dayId}')">Remover Dia</button>
+            `;
+            container.appendChild(dayDiv);
+            dayCounter++;
+            updateDayLabels(); // Atualiza os rótulos após adicionar
+        }
+
+        // Função para remover um dia de treino personalizado
+        function removeCustomDay(id) {
+            const dayToRemove = document.getElementById(id);
+            if (dayToRemove) {
+                dayToRemove.remove();
+                updateDayLabels(); // Reorganiza os rótulos após remover
+            }
+        }
+
+        // Função para atualizar os rótulos dos dias (A, B, C...) após adicionar/remover
+        function updateDayLabels() {
+            const dayEntries = document.querySelectorAll('.custom-day-entry');
+            dayEntries.forEach((entry, index) => {
+                const labelElement = entry.querySelector('label');
+                const checkboxesContainer = entry.querySelector('.muscle-selection-group');
+                const removeBtn = entry.querySelector('.remove-day-btn');
+
+                const newDayLabel = String.fromCharCode(65 + index);
+                const newDayId = `custom_day_${index}`;
+
+                entry.id = newDayId;
+                labelElement.textContent = `Dia ${newDayLabel}: Selecione os Grupos Musculares`;
+                
+                // Atualiza os nomes dos checkboxes para o novo ID do dia
+                Array.from(checkboxesContainer.querySelectorAll('input[type="checkbox"]')).forEach(checkbox => {
+                    checkbox.name = `${newDayId}_group_checkbox`;
+                });
+
+                removeBtn.setAttribute('onclick', `removeCustomDay('${newDayId}')`);
+            });
+            dayCounter = dayEntries.length; // Garante que o contador esteja correto
+        }
+
+        // Adiciona um dia padrão ao carregar a página e popula o dropdown de ênfase
+        window.onload = function() {
+            addCustomDay();
+            populateMuscleEmphasisCheckboxes(); // Chamada para a nova função
+        };
+
+        // Função para popular os checkboxes de ênfase muscular
+        function populateMuscleEmphasisCheckboxes() {
+            const container = document.getElementById('muscleEmphasisCheckboxes');
+            container.innerHTML = ''; // Limpar opções existentes antes de popular
+            muscleGroupOptions.forEach(group => {
+                const label = document.createElement('label');
+                label.innerHTML = `
+                    <input type="checkbox" class="muscle-emphasis-checkbox" value="${group}">
+                    ${group}
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        // Função auxiliar para remover emojis e ajustar o texto para PDF
+        function cleanTextForPdf(text) {
+            // Remove emojis e outros caracteres especiais que podem causar problemas em PDF ou regex sem 'u' flag
+            // Esta regex tenta cobrir uma ampla gama de emojis e símbolos Unicode sem a flag 'u'
+            // Inclui:
+            // - Ranges básicos de emoji e símbolos (U+2000 a U+32FF)
+            // - Pares substitutos (surrogate pairs) que representam emojis fora do Basic Multilingual Plane (BMP)
+            // - Variações de seletores de apresentação (FE00-FE0F)
+            // - Zero Width Joiner (U+200D) e outros modificadores de emoji
+            const noEmojis = text.replace(/(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|[\u2600-\u26FF]|\u2700-\u27BF|\uFE0E|\uFE0F|\u200D)/g, '');
+            
+            // Substitui negrito HTML por um marcador simples para o PDF
+            const cleaned = noEmojis.replace(/<strong>(.*?)<\/strong>/g, '$1') // Remove tags strong
+                                    .replace(/<em>(.*?)<\/em>/g, '$1')     // Remove tags em
+                                    .replace(/<hr.*?>/g, '\n------------------------------------------------------\n'); // Substitui <hr>
+
+            return cleaned;
+        }
+
+
+        function getSeriesRepeticoes(objetivo, nivel) {
+            switch (objetivo) {
+                case "Hipertrofia":
+                    if (nivel === "Iniciante") return "3x10-12";
+                    if (nivel === "Intermediario") return "3-4x8-12";
+                    if (nivel === "Avancado") return "4x6-10";
+                    break;
+                case "Emagrecimento":
+                    if (nivel === "Iniciante") return "3x12-15";
+                    if (nivel === "Intermediario") return "3-4x12-15";
+                    if (nivel === "Avancado") return "4-5x15-20";
+                    break;
+                case "Forca":
+                    if (nivel === "Iniciante") return "3x8-10";
+                    if (nivel === "Intermediario") return "3-5x6-8";
+                    if (nivel === "Avancado") return "5x3-5";
+                    break;
+                case "Resistencia":
+                    if (nivel === "Iniciante") return "3x15-20";
+                    if (nivel === "Intermediario") return "3-4x15-25";
+                    if (nivel === "Avancado") return "4-5x20+";
+                    break;
+                default:
+                    return "3x10-12";
+            }
+            return "3x10-12";
+        }
+
+        function getDescanso(objetivo) {
+            switch (objetivo) {
+                case "Hipertrofia": return "60-90 segundos";
+                case "Emagrecimento": return "30-60 segundos";
+                case "Forca": return "90-180 segundos";
+                case "Resistencia": return "30-45 segundos";
+                default: return "60 segundos";
+            }
+        }
+
+        // Função para selecionar um número aleatório de itens de uma lista
+        function getRandomSubset(arr, numItems) {
+            if (numItems >= arr.length) {
+                return [...arr]; // Retorna uma cópia completa se o número for maior ou igual
+            }
+            const shuffled = [...arr].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, numItems);
+        }
+
+        // --- LÓGICA DE GERAÇÃO DO TREINO ---
+        function gerarTreino() {
+            const nomeAluno = document.getElementById('nomeAluno').value.trim();
+            const sexo = document.getElementById('sexo').value;
+            const nivel = document.getElementById('nivel').value;
+            const objetivo = document.getElementById('objetivo').value;
+            const observacoesGerais = document.getElementById('observacoesGerais').value.trim();
+            
+            // Obter os grupos musculares selecionados para ênfase
+            const selectedEmphasisMuscles = Array.from(document.querySelectorAll('.muscle-emphasis-checkbox:checked'))
+                                                .map(cb => cb.value);
+            
+            const tecnicasSelecionadas = Array.from(document.querySelectorAll('.tecnica-avancada:checked'))
+                                                .map(cb => cb.value);
+            const includeElastic = document.getElementById('includeElastic').checked;
+            const includeBodyweight = document.getElementById('includeBodyweight').checked;
+            const includeCables = document.getElementById('includeCables').checked; 
+            const includeKettlebell = document.getElementById('includeKettlebell').checked; 
+
+
+            const resultadoDiv = document.getElementById('resultado');
+            resultadoDiv.innerHTML = ''; // Limpa resultados anteriores
+
+            if (!nomeAluno) {
+                alert("Por favor, digite o nome do aluno.");
+                return;
+            }
+
+            // Coleta e valida os dias de treino personalizados
+            const customDivisionsData = [];
+            const dayEntries = document.querySelectorAll('.custom-day-entry');
+            if (dayEntries.length === 0) {
+                alert("Por favor, adicione pelo menos um dia de treino personalizado.");
+                return;
+            }
+
+            let hasInvalidSelection = false;
+            dayEntries.forEach((entry, index) => {
+                const dayId = `custom_day_${index}`; // Recalculate dayId based on current index
+                const selectedOptions = Array.from(entry.querySelectorAll(`input[name="${dayId}_group_checkbox"]:checked`)).map(cb => cb.value);
+
+                if (selectedOptions.length === 0) {
+                    alert(`Dia ${String.fromCharCode(65 + index)}: Por favor, selecione pelo menos um grupo muscular para este dia.`);
+                    hasInvalidSelection = true;
+                    return;
+                }
+                customDivisionsData.push({
+                    dayName: String.fromCharCode(65 + index),
+                    groups: selectedOptions
+                });
+                // console.log(`Dia ${String.fromCharCode(65 + index)} configurado com grupos: ${selectedOptions.join(', ')}`);
+            });
+
+            if (hasInvalidSelection) {
+                console.error("Geração de treino interrompida devido a seleção inválida de grupos.");
+                return; // Para a geração se houver grupos inválidos
+            }
+
+            // Prepare structured data for PDF
+            treinoGeradoConteudoParaPDF = {
+                aluno: nomeAluno,
+                sexo: sexo,
+                nivel: nivel,
+                objetivo: objetivo,
+                tecnicas: tecnicasSelecionadas,
+                observacoes: observacoesGerais,
+                dias: []
+            };
+
+            let treinoOutputHTML = `<h2>🏋️ Treino Personalizado para ${nomeAluno} (${sexo}) 🏋️</h2>`;
+            treinoOutputHTML += `<p><strong>📊 Nível:</strong> ${nivel} | <strong>🎯 Objetivo:</strong> ${objetivo}</p>`;
+            
+            if (tecnicasSelecionadas.length > 0) {
+                treinoOutputHTML += `<p><strong>✨ Técnicas Avançadas Aplicadas:</strong> ${tecnicasSelecionadas.join(', ')}</p>`;
+            }
+            
+            if (observacoesGerais) {
+                treinoOutputHTML += `<p><strong>📝 Observações do Professor:</strong> ${observacoesGerais}</p>`;
+            }
+            treinoOutputHTML += `\n<hr style="border-color: rgba(255,255,255,0.3);">\n`;
+
+
+            const tecnicasUnicas = tecnicasSelecionadas.filter(t => t !== "Superset" && t !== "Bi-set");
+
+
+            customDivisionsData.forEach((diaConfig, i) => {
+                const diaLetra = diaConfig.dayName;
+                const gruposDoDia = diaConfig.groups;
+                
+                // Gerar o título do dia
+                let tituloDia = `🗓️ DIA ${diaLetra}: `;
+                tituloDia += `${gruposDoDia[0]}`;
+                if (gruposDoDia.length > 1) {
+                    tituloDia += ` + ${gruposDoDia.slice(1).join(' + ')}`;
+                }
+                treinoOutputHTML += `<h3>${tituloDia}</h3>\n`;
+                
+                // Aquecimento (seleção aleatória de 3-4 itens)
+                const selectedWarmup = getRandomSubset(aquecimentoAlongamento["Aquecimento Geral (5-10 minutos)"], Math.floor(Math.random() * (4 - 3 + 1)) + 3);
+                treinoOutputHTML += `<p><strong>🔥 Aquecimento Geral (5-10 min):</strong></p><ul>`;
+                selectedWarmup.forEach(item => {
+                    treinoOutputHTML += `<li>${item}</li>`;
+                });
+                treinoOutputHTML += `</ul>\n`;
+
+                const exerciciosJaUsadosNoDia = new Set(); // Para evitar exercícios repetidos no MESMO dia
+                
+                let tecnicasAplicadasNesteDia = 0;
+                const maxTecnicasPorDia = 2; // Limite de técnicas por dia para treinos personalizados
+
+                // --- Level Differentiation (Volume) ---
+                let minBase, maxBase;
+                if (nivel === "Iniciante") {
+                    minBase = 5; maxBase = 6;
+                } else if (nivel === "Intermediario") {
+                    minBase = 6; maxBase = 8;
+                } else { // Avancado
+                    minBase = 7; maxBase = 9;
+                }
+                let totalExerciciosDesejadosNoDia = Math.floor(Math.random() * (maxBase - minBase + 1)) + minBase;
+
+                // Ajustar o total de exercícios desejados com base nos músculos de ênfase
+                const maxExercisesOverall = (nivel === "Avancado" ? 12 : (nivel === "Intermediario" ? 10 : 8)); // Aumentado para acomodar ênfase
+                selectedEmphasisMuscles.forEach(emphasisMuscle => {
+                    if (gruposDoDia.includes(emphasisMuscle) && totalExerciciosDesejadosNoDia < maxExercisesOverall) {
+                        totalExerciciosDesejadosNoDia++; // Adiciona um exercício extra para cada músculo de ênfase
+                    }
+                });
+                
+                // Calculate base distribution
+                let baseExercisesPerGroup = Math.floor(totalExerciciosDesejadosNoDia / gruposDoDia.length);
+                let remainder = totalExerciciosDesejadosNoDia % gruposDoDia.length;
+
+                const distribuicaoExerciciosPorGrupo = {};
+                gruposDoDia.forEach(grupo => {
+                    distribuicaoExerciciosPorGrupo[grupo] = baseExercisesPerGroup;
+                });
+
+                // Prioritize distributing remainder to emphasized groups first
+                selectedEmphasisMuscles.forEach(emphasisMuscle => {
+                    if (gruposDoDia.includes(emphasisMuscle) && remainder > 0) {
+                        distribuicaoExerciciosPorGrupo[emphasisMuscle]++;
+                        remainder--;
+                    }
+                });
+                // Distribute any remaining remainder to other groups cyclically
+                for (let k = 0; k < remainder; k++) {
+                    distribuicaoExerciciosPorGrupo[gruposDoDia[k % gruposDoDia.length]]++; 
+                }
+
+
+                let allExercisesFoundForDay = true; // Flag para verificar se todos os exercícios foram encontrados
+
+                const exercisesForPdfTable = []; // Collect exercises for PDF table in order
+                const htmlExerciseList = []; // Collect HTML list items for display
+
+                gruposDoDia.forEach(grupo => {
+                    const numExerciciosParaGrupo = distribuicaoExerciciosPorGrupo[grupo] || 0;
+                    if (numExerciciosParaGrupo === 0) return; // Skip if no exercises for this group
+
+                    let availableExercisesForGroup = bancoDeExercicios[grupo] ? bancoDeExercicios[grupo][nivel] : [];
+
+                    // Step 1: Filter by optional equipment first
+                    let equipmentFilteredExercises = availableExercisesForGroup.filter(ex => {
+                        const equipmentType = ex.equipamento[0];
+                        switch (equipmentType) {
+                            case "Faixa Elástica": return includeElastic;
+                            case "Peso Corporal": return includeBodyweight;
+                            case "Cabos": return includeCables;
+                            case "Kettlebell": return includeKettlebell;
+                            case "Barra":
+                            case "Halteres":
+                            case "Máquina":
+                            case "Barra Fixa / Paralela":
+                            case "Outros Acessórios":
+                            case "Diversos":
+                                return true;
+                            default:
+                                return true;
+                        }
+                    });
+
+                    // Step 2: Separate by difficulty levels for intelligent picking
+                    let beginnerExercises = equipmentFilteredExercises.filter(ex => ex.difficulty === "Iniciante");
+                    let intermediateExercises = equipmentFilteredExercises.filter(ex => ex.difficulty === "Intermediario");
+                    let advancedExercises = equipmentFilteredExercises.filter(ex => ex.difficulty === "Avancado");
+
+                    let selectedExercisesForGroup = [];
+                    let attempts = 0;
+                    const maxAttemptsPerExercise = 50; // Limit attempts to find a unique exercise
+
+                    // Prioritize difficulty based on level
+                    if (nivel === "Iniciante") {
+                        // Try to fill with beginner exercises
+                        while (selectedExercisesForGroup.length < numExerciciosParaGrupo && beginnerExercises.length > 0 && attempts < maxAttemptsPerExercise * numExerciciosParaGrupo) {
+                            const randomIndex = Math.floor(Math.random() * beginnerExercises.length);
+                            const exercise = beginnerExercises[randomIndex];
+                            if (!exerciciosJaUsadosNoDia.has(exercise.nome)) {
+                                selectedExercisesForGroup.push(exercise);
+                                exerciciosJaUsadosNoDia.add(exercise.nome);
+                                beginnerExercises.splice(randomIndex, 1); // Remove to prevent re-picking from this temp array
+                            }
+                            attempts++;
+                        }
+                        // If still not enough, try intermediate exercises
+                        attempts = 0; // Reset attempts
+                        while (selectedExercisesForGroup.length < numExerciciosParaGrupo && intermediateExercises.length > 0 && attempts < maxAttemptsPerExercise * numExerciciosParaGrupo) {
+                            const randomIndex = Math.floor(Math.random() * intermediateExercises.length);
+                            const exercise = intermediateExercises[randomIndex];
+                            if (!exerciciosJaUsadosNoDia.has(exercise.nome)) {
+                                selectedExercisesForGroup.push(exercise);
+                                exerciciosJaUsadosNoDia.add(exercise.nome);
+                                intermediateExercises.splice(randomIndex, 1);
+                            }
+                            attempts++;
+                        }
+                    } else if (nivel === "Intermediario") {
+                        // Try intermediate first
+                        while (selectedExercisesForGroup.length < numExerciciosParaGrupo && intermediateExercises.length > 0 && attempts < maxAttemptsPerExercise * numExerciciosParaGrupo) {
+                            const randomIndex = Math.floor(Math.random() * intermediateExercises.length);
+                            const exercise = intermediateExercises[randomIndex];
+                            if (!exerciciosJaUsadosNoDia.has(exercise.nome)) {
+                                selectedExercisesForGroup.push(exercise);
+                                exerciciosJaUsadosNoDia.add(exercise.nome);
+                                intermediateExercises.splice(randomIndex, 1);
+                            }
+                            attempts++;
+                        }
+                        // Then beginner
+                        attempts = 0;
+                        while (selectedExercisesForGroup.length < numExerciciosParaGrupo && beginnerExercises.length > 0 && attempts < maxAttemptsPerExercise * numExerciciosParaGrupo) {
+                            const randomIndex = Math.floor(Math.random() * beginnerExercises.length);
+                            const exercise = beginnerExercises[randomIndex];
+                            if (!exerciciosJaUsadosNoDia.has(exercise.nome)) {
+                                selectedExercisesForGroup.push(exercise);
+                                exerciciosJaUsadosNoDia.add(exercise.nome);
+                                beginnerExercises.splice(randomIndex, 1);
+                            }
+                            attempts++;
+                        }
+                        // Finally advanced (as a last resort for variety/completeness)
+                        attempts = 0;
+                        while (selectedExercisesForGroup.length < numExerciciosParaGrupo && advancedExercises.length > 0 && attempts < maxAttemptsPerExercise * numExerciciosParaGrupo) {
+                            const randomIndex = Math.floor(Math.random() * advancedExercises.length);
+                            const exercise = advancedExercises[randomIndex];
+                            if (!exerciciosJaUsadosNoDia.has(exercise.nome)) {
+                                selectedExercisesForGroup.push(exercise);
+                                exerciciosJaUsadosNoDia.add(exercise.nome);
+                                advancedExercises.splice(randomIndex, 1);
+                            }
+                            attempts++;
+                        }
+                    } else { // Avancado
+                        // For advanced, all are fair game. Combine and shuffle.
+                        let allEligibleForAdvanced = [...beginnerExercises, ...intermediateExercises, ...advancedExercises];
+                        allEligibleForAdvanced.sort(() => 0.5 - Math.random()); // Shuffle for randomness
+
+                        while (selectedExercisesForGroup.length < numExerciciosParaGrupo && allEligibleForAdvanced.length > 0 && attempts < maxAttemptsPerExercise * numExerciciosParaGrupo) {
+                            const exercise = allEligibleForAdvanced.shift(); // Take from the beginning
+                            if (exercise && !exerciciosJaUsadosNoDia.has(exercise.nome)) {
+                                selectedExercisesForGroup.push(exercise);
+                                exerciciosJaUsadosNoDia.add(exercise.nome);
+                            }
+                            attempts++;
+                        }
+                    }
+
+                    // If still not enough, it means the pool of exercises is truly exhausted for this group
+                    if (selectedExercisesForGroup.length < numExerciciosParaGrupo) {
+                        console.warn(`Aviso: Não foi possível encontrar o número desejado de exercícios (${numExerciciosParaGrupo}) para o grupo ${grupo} no nível ${nivel}. Encontrados: ${selectedExercisesForGroup.length}.`);
+                        // We will proceed with the exercises found, even if fewer than desired.
+                    }
+                    
+                    // Add to ordered list for PDF and HTML
+                    if (selectedExercisesForGroup.length > 0) {
+                        htmlExerciseList.push(`<h4>--- ${grupo} ---</h4><ul>`); // Sub-título para o grupo muscular
+                        selectedExercisesForGroup.forEach(exercicio => {
+                            let execucaoText = `${getSeriesRepeticoes(objetivo, nivel)} | Descanso: ${getDescanso(objetivo)}`;
+                            let tecnicaAplicada = "";
+                            
+                            // Lógica de Aplicação Inteligente de Técnicas
+                            if (tecnicasUnicas.length > 0 && tecnicasAplicadasNesteDia < maxTecnicasPorDia) {
+                                // Aumenta a chance de aplicar técnica para níveis mais avançados
+                                const chanceTecnica = (nivel === "Avancado" ? 0.6 : (nivel === "Intermediario" ? 0.3 : 0.05)); // Reduced chance for beginner
+                                if (Math.random() < chanceTecnica) {
+                                    const tecnicaForThisExercise = tecnicasUnicas[Math.floor(Math.random() * tecnicasUnicas.length)];
+                                    execucaoText += ` | Técnica: ${tecnicaForThisExercise}`;
+                                    tecnicaAplicada = tecnicaForThisExercise;
+                                    tecnicasAplicadasNesteDia++;
+                                }
+                            }
+
+                            htmlExerciseList.push(`<li><strong>${exercicio.nome}</strong> (${exercicio.equipamento.join(', ')}) - ${execucaoText}`);
+                            if (exercicio.instrucoes) { // Removed nivel check, instructions are always useful
+                                htmlExerciseList.push(` <br> <em>Instruções: ${exercicio.instrucoes}</em>`);
+                            }
+                            htmlExerciseList.push(`</li>`);
+
+                            exercisesForPdfTable.push({
+                                nome: exercicio.nome,
+                                equipamento: exercicio.equipamento.join(', '),
+                                execucao: getSeriesRepeticoes(objetivo, nivel),
+                                descanso: getDescanso(objetivo),
+                                tecnica: tecnicaAplicada || '-' // Se não houver técnica, mostra '-'
+                            });
+                        });
+                        htmlExerciseList.push(`</ul>`);
+                    }
+                });
+
+                const currentDayPdfData = {
+                    dayName: diaLetra,
+                    groups: gruposDoDia,
+                    warmup: selectedWarmup,
+                    exercises: [], // Será preenchido com os exercícios ordenados
+                    cardio: null,
+                    motivationalPhrase: "Cada repetição é um passo mais perto do seu objetivo! Mantenha o foco e supere-se!" // Motivational phrase
+                };
+
+                if (exercisesForPdfTable.length === 0) { // Check if any exercises were generated at all for the day
+                    treinoOutputHTML += `<p style="color: #ffcccc;">Não foi possível gerar exercícios para o Dia ${diaLetra}. Por favor, verifique a sua seleção de grupos musculares, opções de equipamentos e nível de treino para garantir que há exercícios disponíveis.</p>\n`;
+                    currentDayPdfData.exercises.push({
+                        nome: `Não foi possível gerar exercícios para o Dia ${diaLetra}.`,
+                        equipamento: "",
+                        execucao: "Verifique a configuração.",
+                        descanso: "",
+                        tecnica: ""
+                    });
+                } else {
+                    treinoOutputHTML += `<p><strong>💪 Treino de Força:</strong></p>${htmlExerciseList.join('\n')}`;
+                    currentDayPdfData.exercises = exercisesForPdfTable; // Assign the ordered exercises
+                }
+
+                // Cardio (mantido - agora pode ser incluído em qualquer dia personalizado)
+                // Para evitar cardio em *todos* os dias, podemos adicionar uma chance ou regra
+                if (objetivo === "Emagrecimento" || Math.random() > 0.4) { // Sempre inclui para Emagrecimento, 60% de chance para outros
+                    const availableCardio = cardioExercises[nivel];
+                    if (availableCardio && availableCardio.length > 0) {
+                        const cardioEscolhido = availableCardio[Math.floor(Math.random() * availableCardio.length)];
+                        let cardioText = cardioEscolhido.nome;
+                        if (objetivo === "Emagrecimento") {
+                            cardioText += " - Mantenha a intensidade para maximizar a queima de gordura!";
+                        }
+                        treinoOutputHTML += `<p><strong>🏃 Cardio:</strong> ${cardioText}</p>\n`;
+                        currentDayPdfData.cardio = cardioText;
+                    } else {
+                         treinoOutputHTML += `<p><strong>🏃 Cardio:</strong> Não foi possível gerar um exercício de cardio para este nível.</p>\n`;
+                         currentDayPdfData.cardio = "Não foi possível gerar um exercício de cardio para este nível.";
+                    }
+                }
+
+                // Motivational Phrase
+                treinoOutputHTML += `<p><strong>🌟 Motivação:</strong> ${currentDayPdfData.motivationalPhrase}</p>\n`;
+                
+                treinoOutputHTML += `\n<hr style="border-color: rgba(255,255,255,0.3);">\n`;
+                treinoGeradoConteudoParaPDF.dias.push(currentDayPdfData);
+            }); // Fim do loop customDivisionsData
+
+            resultadoDiv.innerHTML = treinoOutputHTML;
+            // treinoGeradoConteudoHTML já está salvo
+            // treinoGeradoConteudoParaPDF já está preenchido
+        }
+
+        // --- LÓGICA DE EXPORTAÇÃO PARA PDF ---
+        function exportarTreinoParaPDF() {
+            if (!treinoGeradoConteudoParaPDF.aluno) {
+                alert("Por favor, gere um treino primeiro antes de exportar para PDF.");
+                return;
+            }
+
+            const doc = new window.jspdf.jsPDF();
+            const { aluno, sexo, nivel, objetivo, tecnicas, observacoes, dias } = treinoGeradoConteudoParaPDF;
+            
+            const margin = 15;
+            let yOffset = margin;
+            const lineHeight = 7;
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            // Função para adicionar cabeçalho e rodapé a cada página
+            const addPageContent = () => {
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text("Gerado por seu Treinador Pessoal.", margin, doc.internal.pageSize.getHeight() - 10);
+                doc.text(`Página ${doc.internal.getNumberOfPages()}`, pageWidth - margin, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+            };
+
+            // Título Principal
+            doc.setFontSize(22);
+            doc.setTextColor(30, 78, 114); // Azul escuro
+            doc.text(`Treino Personalizado para ${aluno}`, pageWidth / 2, yOffset, { align: 'center' });
+            yOffset += lineHeight * 2;
+
+            doc.setDrawColor(200, 200, 200); // Cor cinza clara para a linha
+            doc.line(margin, yOffset, pageWidth - margin, yOffset); // Linha separadora
+            yOffset += lineHeight;
+
+            doc.setFontSize(12);
+            doc.setTextColor(50, 50, 50); // Quase preto
+
+            // Informações Gerais do Treino
+            doc.text(`Nível: ${nivel}`, margin, yOffset);
+            yOffset += lineHeight;
+            doc.text(`Objetivo: ${objetivo}`, margin, yOffset);
+            yOffset += lineHeight;
+            doc.text(`Sexo: ${sexo}`, margin, yOffset);
+            yOffset += lineHeight;
+
+            if (tecnicas.length > 0) {
+                doc.text(`Técnicas Avançadas: ${tecnicas.join(', ')}`, margin, yOffset);
+                yOffset += lineHeight;
+            }
+            if (observacoes) {
+                // Quebra de texto para observações
+                const obsLines = doc.splitTextToSize(`Observações: ${observacoes}`, pageWidth - 2 * margin);
+                doc.text(obsLines, margin, yOffset);
+                yOffset += lineHeight * obsLines.length;
+            }
+            yOffset += lineHeight; // Espaço após informações gerais
+
+            doc.line(margin, yOffset, pageWidth - margin, yOffset); // Linha separadora
+            yOffset += lineHeight * 1.5; // Mais espaço antes do primeiro dia
+
+            // Iterar sobre os dias de treino
+            dias.forEach((dia, index) => {
+                // Adicionar nova página se não houver espaço suficiente para o próximo dia
+                if (yOffset + 50 > doc.internal.pageSize.getHeight() - margin) { // 50 é uma estimativa de altura para o título do dia + aquecimento
+                    doc.addPage();
+                    yOffset = margin;
+                    addPageContent(); // Adiciona cabeçalho/rodapé à nova página
+                    yOffset += lineHeight * 2; // Espaço após cabeçalho
+                }
+
+                // Título do Dia
+                doc.setFontSize(16);
+                doc.setTextColor(30, 78, 114);
+                doc.text(`DIA ${dia.dayName}: ${dia.groups.join(' + ')}`, margin, yOffset);
+                yOffset += lineHeight * 1.5;
+
+                // Aquecimento
+                doc.setFontSize(12);
+                doc.setTextColor(50, 50, 50);
+                doc.text('Aquecimento Geral (5-10 min):', margin, yOffset);
+                yOffset += lineHeight;
+                dia.warmup.forEach(item => {
+                    doc.text(`  - ${item}`, margin, yOffset);
+                    yOffset += lineHeight;
+                });
+                yOffset += lineHeight; // Espaço após aquecimento
+
+                // Tabela de Exercícios de Força
+                const tableHeaders = [['Exercício', 'Equipamento', 'Séries/Repetições', 'Descanso', 'Técnica']];
+                const tableData = dia.exercises.map(ex => [
+                    ex.nome,
+                    ex.equipamento,
+                    ex.execucao,
+                    ex.descanso,
+                    ex.tecnica || '-' // Se não houver técnica, mostra '-'
+                ]);
+
+                doc.autoTable({
+                    startY: yOffset,
+                    head: tableHeaders,
+                    body: tableData,
+                    theme: 'grid', // 'striped', 'grid', 'plain'
+                    styles: {
+                        font: 'helvetica',
+                        fontSize: 10,
+                        cellPadding: 2,
+                        lineColor: 200,
+                        lineWidth: 0.1
+                    },
+                    headStyles: {
+                        fillColor: [69, 123, 157], // Azul médio
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        textColor: [50, 50, 50]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [240, 240, 240] // Cinza claro para linhas alternadas
+                    },
+                    margin: { left: margin, right: margin },
+                    didDrawPage: (data) => {
+                        // Adiciona cabeçalho/rodapé em cada página da tabela
+                        addPageContent();
+                    }
+                });
+
+                yOffset = doc.autoTable.previous.finalY + lineHeight; // Pega a posição final da tabela
+
+                // Cardio (se houver)
+                if (dia.cardio) {
+                    if (yOffset + 2 * lineHeight > doc.internal.pageSize.getHeight() - margin) {
+                        doc.addPage();
+                        yOffset = margin;
+                        addPageContent();
+                        yOffset += lineHeight * 2;
+                    }
+                    doc.setFontSize(12);
+                    doc.setTextColor(50, 50, 50);
+                    const cardioLines = doc.splitTextToSize(`Cardio: ${dia.cardio}`, pageWidth - 2 * margin);
+                    doc.text(cardioLines, margin, yOffset);
+                    yOffset += lineHeight * cardioLines.length;
+                }
+                yOffset += lineHeight; // Espaço após cardio
+
+                // Motivational Phrase
+                if (dia.motivationalPhrase) {
+                    if (yOffset + 2 * lineHeight > doc.internal.pageSize.getHeight() - margin) {
+                        doc.addPage();
+                        yOffset = margin;
+                        addPageContent();
+                        yOffset += lineHeight * 2;
+                    }
+                    doc.setFontSize(12);
+                    doc.setTextColor(50, 50, 50);
+                    const phraseLines = doc.splitTextToSize(`🌟 Motivação: ${dia.motivationalPhrase}`, pageWidth - 2 * margin);
+                    doc.text(phraseLines, margin, yOffset);
+                    yOffset += lineHeight * phraseLines.length;
+                }
+                yOffset += lineHeight * 2; // Espaço extra entre os dias
+            });
+
+            // Adiciona cabeçalho/rodapé à última página, se necessário
+            addPageContent();
+            
+            doc.save(`treino_${aluno.replace(/\s/g, '_').toLowerCase()}.pdf`);
+        }
+    </script>
+</body>
+</html>
