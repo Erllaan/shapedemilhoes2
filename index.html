@@ -1211,7 +1211,6 @@ Dança aeróbica
                             if (!exerciciosJaUsadosNoDia.has(exercise.nome)) {
                                 selectedExercisesForGroup.push(exercise);
                                 exerciciosJaUsadosNoDia.add(exercise.nome);
-                                advancedExercises.splice(randomIndex, 1);
                             }
                             attempts++;
                         }
@@ -1352,7 +1351,7 @@ Dança aeróbica
             // Título Principal
             doc.setFontSize(22);
             doc.setTextColor(30, 78, 114); // Azul escuro
-            doc.text(`Treino Personalizado para ${aluno}`, pageWidth / 2, yOffset, { align: 'center' });
+            doc.text(`Treino Personalizado para ${cleanTextForPdf(aluno)}`, pageWidth / 2, yOffset, { align: 'center' });
             yOffset += lineHeight * 2;
 
             doc.setDrawColor(200, 200, 200); // Cor cinza clara para a linha
@@ -1363,20 +1362,20 @@ Dança aeróbica
             doc.setTextColor(50, 50, 50); // Quase preto
 
             // Informações Gerais do Treino
-            doc.text(`Nível: ${nivel}`, margin, yOffset);
+            doc.text(`Nível: ${cleanTextForPdf(nivel)}`, margin, yOffset);
             yOffset += lineHeight;
-            doc.text(`Objetivo: ${objetivo}`, margin, yOffset);
+            doc.text(`Objetivo: ${cleanTextForPdf(objetivo)}`, margin, yOffset);
             yOffset += lineHeight;
-            doc.text(`Sexo: ${sexo}`, margin, yOffset);
+            doc.text(`Sexo: ${cleanTextForPdf(sexo)}`, margin, yOffset);
             yOffset += lineHeight;
 
             if (tecnicas.length > 0) {
-                doc.text(`Técnicas Avançadas: ${tecnicas.join(', ')}`, margin, yOffset);
+                doc.text(`Técnicas Avançadas: ${cleanTextForPdf(tecnicas.join(', '))}`, margin, yOffset);
                 yOffset += lineHeight;
             }
             if (observacoes) {
                 // Quebra de texto para observações
-                const obsLines = doc.splitTextToSize(`Observações: ${observacoes}`, pageWidth - 2 * margin);
+                const obsLines = doc.splitTextToSize(`Observações: ${cleanTextForPdf(observacoes)}`, pageWidth - 2 * margin);
                 doc.text(obsLines, margin, yOffset);
                 yOffset += lineHeight * obsLines.length;
             }
@@ -1398,7 +1397,7 @@ Dança aeróbica
                 // Título do Dia
                 doc.setFontSize(16);
                 doc.setTextColor(30, 78, 114);
-                doc.text(`DIA ${dia.dayName}: ${dia.groups.join(' + ')}`, margin, yOffset);
+                doc.text(`DIA ${dia.dayName}: ${cleanTextForPdf(dia.groups.join(' + '))}`, margin, yOffset);
                 yOffset += lineHeight * 1.5;
 
                 // Aquecimento
@@ -1407,7 +1406,7 @@ Dança aeróbica
                 doc.text('Aquecimento Geral (5-10 min):', margin, yOffset);
                 yOffset += lineHeight;
                 dia.warmup.forEach(item => {
-                    doc.text(`  - ${item}`, margin, yOffset);
+                    doc.text(`  - ${cleanTextForPdf(item)}`, margin, yOffset);
                     yOffset += lineHeight;
                 });
                 yOffset += lineHeight; // Espaço após aquecimento
@@ -1415,11 +1414,11 @@ Dança aeróbica
                 // Tabela de Exercícios de Força
                 const tableHeaders = [['Exercício', 'Equipamento', 'Séries/Repetições', 'Descanso', 'Técnica']];
                 const tableData = dia.exercises.map(ex => [
-                    ex.nome,
-                    ex.equipamento,
-                    ex.execucao,
-                    ex.descanso,
-                    ex.tecnica || '-' // Se não houver técnica, mostra '-'
+                    cleanTextForPdf(ex.nome),
+                    cleanTextForPdf(ex.equipamento),
+                    cleanTextForPdf(ex.execucao),
+                    cleanTextForPdf(ex.descanso),
+                    cleanTextForPdf(ex.tecnica || '-') // Se não houver técnica, mostra '-'
                 ]);
 
                 doc.autoTable({
@@ -1428,7 +1427,7 @@ Dança aeróbica
                     body: tableData,
                     theme: 'grid', // 'striped', 'grid', 'plain'
                     styles: {
-                        font: 'helvetica',
+                        font: 'helvetica', // Explicitly set font for table
                         fontSize: 10,
                         cellPadding: 2,
                         lineColor: 200,
@@ -1464,7 +1463,7 @@ Dança aeróbica
                     }
                     doc.setFontSize(12);
                     doc.setTextColor(50, 50, 50);
-                    const cardioLines = doc.splitTextToSize(`Cardio: ${dia.cardio}`, pageWidth - 2 * margin);
+                    const cardioLines = doc.splitTextToSize(`Cardio: ${cleanTextForPdf(dia.cardio)}`, pageWidth - 2 * margin);
                     doc.text(cardioLines, margin, yOffset);
                     yOffset += lineHeight * cardioLines.length;
                 }
@@ -1480,7 +1479,7 @@ Dança aeróbica
                     }
                     doc.setFontSize(12);
                     doc.setTextColor(50, 50, 50);
-                    const phraseLines = doc.splitTextToSize(`🌟 Motivação: ${dia.motivationalPhrase}`, pageWidth - 2 * margin);
+                    const phraseLines = doc.splitTextToSize(`🌟 Motivação: ${cleanTextForPdf(dia.motivationalPhrase)}`, pageWidth - 2 * margin);
                     doc.text(phraseLines, margin, yOffset);
                     yOffset += lineHeight * phraseLines.length;
                 }
